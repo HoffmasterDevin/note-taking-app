@@ -1,24 +1,15 @@
 const express = require('express.js');
-const fs = require('fs');
-const path = require('path');
-const dataBase = require('./db/db.json');
 const app = express();
-const util = require('util');
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
+const apiRoutes = require("./routes/apiRoutes");
+const htmlRoutes = require("./routes/htmlRoutes");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
 app.use(express.static('public'));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.get('/notes', (req, res) => {
-  res.sendFile(path.join(__dirname, 'notes.html'))
-});
+app.use(apiRoutes);
+app.use(htmlRoutes);
 
 app.listen(PORT, () => {
   console.log(`App listening at http://localhost:${PORT}`);
