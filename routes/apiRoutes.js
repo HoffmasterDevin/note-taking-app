@@ -1,3 +1,3 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db/databaseClass');
+const db = require('../db/dbClass');
