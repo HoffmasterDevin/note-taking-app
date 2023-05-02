@@ -16,6 +16,17 @@ class Database {
         }
     }
 
+
+async addNote(data) {
+    try {
+        await writeFileAsync(noteData, JSON.stringify(data, null, "\t")).then(() => {
+            console.log("New note added");
+        }
+        );
+    } catch (error) {
+        throw error;
+    }
+}
 }
 
 module.exports = new Database();

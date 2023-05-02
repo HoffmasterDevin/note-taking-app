@@ -1,15 +1,90 @@
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3001;
+const express = require('express')
+const path = require('path');
+const fs = require('fs');
+const uuid = require('./helpers/uuid');
+const { readAndAppend, readFromFile, writeToFile } = require('./helpers/fsUtils');
 
-const apiRoutes = require("./routes/apiRoutes");
-const htmlRoutes = require("./routes/htmlRoutes");
+const app = express()
+const PORT = process.env.PORT || 3001
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
-//app.use(apiRoutes);
-app.use(htmlRoutes);
+
+app.get('/notes', (req, res) =>
+    res.sendFile(path.join(__dirname, '/public/notes.html'))
+);
+
+app.get('/api/notes', (req, res) => {
+    console.info(`${req.method} request received to get notes`);
+
+    readFromFile('./db/db.json').then((data) =>
+        res.json(JSON.parse(data))
+    );    
+});
+
+app.post('/api/notes', (req, res) => {
+    console.info(`${req.method} request received to add a note`);
+  
+    const { title, text } = req.body;
+  
+    if (title && text) {
+      const newNote = {
+        title,
+        text,        
+        id: uuid(),
+      };
+  
+      readAndAppend(newNote, './db/db.json');
+  
+      const response = {
+        status: 'success',
+        body: newNote,
+      };
+  
+      console.log(response);
+      res.status(201).json(response);
+    } else {
+      res.status(500).json('Error in posting note');
+    }
+});
+
+app.delete('/api/notes/:id', (req, res) => {
+    console.info(`${req.method} request received to delete a note`);
+
+    if(req.params.id){
+        readFromFile('./db/db.json').then((data) => {
+   
+            const noteData = JSON.parse(data);
+    
+            for (let i = 0; i < noteData.length; i++) {
+                if (req.params.id === noteData[i].id) {                     
+                    noteData.splice(i, 1);           
+                }
+            }
+
+            writeToFile('./db/db.json', noteData);
+    
+            const response = {
+                status: 'success',
+                body: noteData,
+            };
+          
+            console.log(response);
+            res.status(201).json(response);
+            
+        });
+    } else {
+        res.status(500).json('Error in deleting note');
+    }
+
+});
+
+app.get('/*', (req, res) =>
+    res.sendFile(path.join(__dirname, '/public/index.html'))
+);
+
+
 
 app.listen(PORT, () => {
   console.log(`App listening at http://localhost:${PORT}`);
